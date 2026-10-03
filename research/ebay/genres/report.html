@@ -1,0 +1,291 @@
+<title>eBay輸出ジャンル判定</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#F4F5F2; --surface:#FFFFFF; --ink:#1A1F1C; --muted:#58625C; --line:#DCE0DA;
+  --accent:#0E6B5C; --accent-soft:#E2F0EC; --good:#1E7A3E; --good-soft:#E3F2E7;
+  --warn:#9A6212; --warn-soft:#FBF0DC; --bad:#B42318; --bad-soft:#FBE6E3;
+  --sans:"IBM Plex Sans JP","Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#111513; --surface:#191F1C; --ink:#E6EBE7; --muted:#9BA69F; --line:#2B3430;
+    --accent:#52C4A9; --accent-soft:#16302A; --good:#62C487; --good-soft:#16301F;
+    --warn:#E3AC52; --warn-soft:#33270F; --bad:#F07A6E; --bad-soft:#3A1916;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#111513; --surface:#191F1C; --ink:#E6EBE7; --muted:#9BA69F; --line:#2B3430;
+  --accent:#52C4A9; --accent-soft:#16302A; --good:#62C487; --good-soft:#16301F;
+  --warn:#E3AC52; --warn-soft:#33270F; --bad:#F07A6E; --bad-soft:#3A1916;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.75;margin:0}
+.wrap{max-width:760px;margin:0 auto;padding-inline:18px;padding-block:28px 64px}
+header .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+h1{font-size:clamp(24px,6vw,32px);line-height:1.3;margin:.3em 0 .4em;text-wrap:balance;font-weight:700}
+.lead{color:var(--muted);margin:0}
+h2{font-size:20px;line-height:1.4;margin:0 0 .6em;text-wrap:balance}
+h3{font-size:16px;margin:1.4em 0 .4em}
+section{margin-top:40px}
+p{margin:.6em 0}
+.num,td.n,th.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pn{font-family:var(--mono);font-size:13px;white-space:nowrap}
+.verdicts{display:grid;gap:10px;margin-top:20px}
+.verdict{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start}
+.chip{font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;white-space:nowrap;letter-spacing:.02em}
+.chip.go{background:var(--good-soft);color:var(--good)}
+.chip.cond{background:var(--warn-soft);color:var(--warn)}
+.chip.no{background:var(--bad-soft);color:var(--bad)}
+.verdict b{font-size:16px}
+.verdict .why{grid-column:1/-1;color:var(--muted);font-size:14px;line-height:1.65}
+.tbl{overflow-x:auto;margin:12px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+th{font-weight:500;color:var(--muted);font-size:12.5px;white-space:nowrap}
+td.n,th.n{text-align:right;white-space:nowrap}
+tr.hl td{background:var(--accent-soft)}
+.bars{display:grid;gap:10px;margin:14px 0}
+.bar{display:grid;grid-template-columns:1fr;gap:4px}
+.bar .lab{display:flex;justify-content:space-between;gap:8px;font-size:13.5px}
+.bar .lab span:last-child{font-family:var(--mono);white-space:nowrap}
+.track{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.fill{height:100%;background:var(--muted);border-radius:5px}
+.bar.key .fill{background:var(--accent)}
+.bar.key .lab{font-weight:700}
+.axis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.note{font-size:13px;color:var(--muted)}
+.callout{border-left:3px solid var(--accent);background:var(--surface);padding:12px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.callout.warn{border-left-color:var(--warn)}
+ul,ol{padding-left:1.3em;margin:.5em 0}
+li{margin:.3em 0}
+.steps{display:grid;gap:10px;margin-top:10px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.step .when{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.step .gate{font-size:13.5px;color:var(--muted);margin-top:4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .v{font-family:var(--mono);font-size:22px;font-weight:500}
+.kpi .k{font-size:12.5px;color:var(--muted)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0}
+summary{cursor:pointer;font-weight:500}
+a{color:var(--accent)}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+footer{margin-top:48px;font-size:12.5px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">eBay輸出 ジャンル調査 · 2026-09-23 実測</div>
+  <h1>バイク純正部品を本命に。最初の7品まで確認済み</h1>
+  <p class="lead">eBayで日本から実際に売れた商品（直近約90日）をログインして全件集め、仕入れ値と手数料・送料で1品番ずつ利益を計算した結果です。</p>
+  <div class="verdicts">
+    <div class="verdict"><span class="chip go">本命</span><b>バイク純正部品</b>
+      <div class="why">日本から売れた実績は90日で5,600件以上。条件をそろえた現実的な仕入れで、調べた1,328品番のうち<b>23%（309品番）</b>が合格ライン（1件3,000円以上・利益率10%以上）を超えた。合格品の利益は中央値<b>6,213円</b>。</div></div>
+    <div class="verdict"><span class="chip cond">保留</span><b>車の純正部品</b>
+      <div class="why">需要は同じくらい大きい（5,500件以上）。ただし売れ筋の品番がモノタロウに1件もなく、ディーラーや部品共販で取り寄せることになる。価格を自動で調べにくいので、2本目の候補に回す。</div></div>
+    <div class="verdict"><span class="chip no">主力にしない</span><b>バドミントン</b>
+      <div class="why">日本から売れたのは90日で<b>13件</b>（全世界でも670件）。ラケットは長さ68cmで安い発送手段（米国宛ては66cmまで）が使えない。新品の現行モデルは試算でほぼ赤字。</div></div>
+  </div>
+</header>
+
+<section id="market">
+  <h2>市場の大きさ：日本から売れた件数</h2>
+  <p>eBayで「売れた商品」を発送元＝日本に絞って数えた件数です（直近約90日）。バドミントンが小さすぎたので、フィルタが正しく効いているかを他のジャンルでも確かめています。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>キーワード</th><th class="n">日本発の落札</th><th>位置づけ</th></tr></thead>
+    <tbody>
+      <tr><td>pokemon card japanese</td><td class="n">16,000+</td><td>比較用（大市場）</td></tr>
+      <tr><td>motorcycle parts</td><td class="n">6,900+</td><td>本命ジャンル</td></tr>
+      <tr><td>seiko</td><td class="n">5,900+</td><td>比較用</td></tr>
+      <tr><td>honda oem / honda genuine</td><td class="n">3,800+ / 3,700+</td><td>本命ジャンル</td></tr>
+      <tr><td>toyota genuine</td><td class="n">3,100+</td><td>車の部品</td></tr>
+      <tr><td>kawasaki</td><td class="n">2,600+</td><td>本命ジャンル</td></tr>
+      <tr><td>yonex（テニス・ゴルフ込み）</td><td class="n">98</td><td>—</td></tr>
+      <tr class="hl"><td>yonex badminton</td><td class="n">13</td><td>ほぼ市場なし</td></tr>
+    </tbody>
+  </table></div>
+  <div class="kpis">
+    <div class="kpi"><div class="v">5,648</div><div class="k">集めたバイク純正部品の落札（件）</div></div>
+    <div class="kpi"><div class="v">¥11,802</div><div class="k">落札価格の中央値</div></div>
+    <div class="kpi"><div class="v">95%</div><div class="k">新品の割合</div></div>
+    <div class="kpi"><div class="v">2,669</div><div class="k">売れた品番の種類</div></div>
+  </div>
+  <p>1つの品番が90日で2回以上売れたのは一部だけで、大半は1回です。<b>1品番がたまに売れる商品を、数多く並べて稼ぐ</b>形の市場です。</p>
+</section>
+
+<section id="why">
+  <h2>なぜ日本から買うのか：同じ純正品が3〜4割安い</h2>
+  <p>買い手の多くは、米国で普通に走っている車種の持ち主です（件数の多い順に Ninja、KX、ZX、CRF、XR、CBR、Vulcan）。部品はエンジン内部（ピストン・バルブ・カム・ガスケット）が最も多く、修理用とみられます。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>品番</th><th>部品</th><th class="n">日本発</th><th class="n">米国発（純正新品）</th></tr></thead>
+    <tbody>
+      <tr><td class="pn">21176-0820</td><td>ギアポジションセンサー</td><td class="n">¥15,754</td><td class="n">¥23,066</td></tr>
+      <tr><td class="pn">11008-0842</td><td>KX250Fのシリンダーヘッド</td><td class="n">¥76,679</td><td class="n">¥138,454</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn"><b>この商売は、円安と日米の定価差に乗っています。</b>円高に振れると価格差が縮み、利益が消えます。これが最大の外部リスクです。</div>
+</section>
+
+<section id="profit">
+  <h2>利益の現実：勝敗は仕入れ値で決まる</h2>
+  <p>売れた価格（品番ごとの中央値）から、手数料（落札13.6%＋国際1.65%＋為替2%＋$0.40）、国際送料2,300円（0.5kg相当）、梱包100円、国内送料（3,500円未満なら550円）、仕入れ値を引いて計算しました。<b>米国の関税は買い手がチェックアウト時に払う</b>ので、セラーの利益からは引きません（eBay公式ページで確認）。</p>
+  <h3>仕入れ方ごとの合格率（1,328品番）</h3>
+  <div class="bars" role="img" aria-label="仕入れ方ごとの合格率の棒グラフ">
+    <div class="bar"><div class="lab"><span>モノタロウで仕入れ・還付なし</span><span>12.0%</span></div><div class="track"><div class="fill" style="width:30%"></div></div></div>
+    <div class="bar"><div class="lab"><span>定価で仕入れ・還付なし</span><span>16.9%</span></div><div class="track"><div class="fill" style="width:42.25%"></div></div></div>
+    <div class="bar key"><div class="lab"><span>現実：メーカー別に最安＋消費税還付</span><span>23.3%</span></div><div class="track"><div class="fill" style="width:58.25%"></div></div></div>
+    <div class="bar"><div class="lab"><span>定価の9掛け＋還付</span><span>28.8%</span></div><div class="track"><div class="fill" style="width:72%"></div></div></div>
+    <div class="bar"><div class="lab"><span>定価の85%＋還付（ベスト）</span><span>32.1%</span></div><div class="track"><div class="fill" style="width:80.25%"></div></div></div>
+    <div class="axis"><span>0%</span><span>20%</span><span>40%</span></div>
+  </div>
+  <p class="note">送料を1kg相当の3,300円にすると、「現実」の合格率は17.6%に下がります。軽い部品に絞るほど有利です。</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v">309</div><div class="k">「現実」で合格した品番</div></div>
+    <div class="kpi"><div class="v">¥6,213</div><div class="k">合格品の利益（中央値）</div></div>
+    <div class="kpi"><div class="v">¥22,807</div><div class="k">合格品の販売価格（中央値）</div></div>
+  </div>
+  <div class="callout warn"><b>この合格率は「落札価格の中央値」で見た上限です。</b>1品番ずつ「いま日本から出ている競合の最安値」と、仕入番のツールで取った実際の仕入れ値で見直すと、合格はさらに減りました。セット売り（8個入り、左右セット）の取り違えもありました。実際に出す商品は、次の章の確認済みリストを使ってください。</div>
+</section>
+
+
+<section id="starter">
+  <h2>最初に出品する商品（確認済み）</h2>
+  <p>「安くて利益率が高い」順に、次の4つを1品番ずつ確かめたものです。</p>
+  <ul>
+    <li>いまの日本発の競合の最安値</li>
+    <li>仕入番のツールで取ったモノタロウ・楽天の実際の価格と在庫</li>
+    <li>出品ページで確かめた個数</li>
+    <li>発送元が日本か</li>
+  </ul>
+  <p>売値は「競合の最安値」と「落札価格の中央値」の低いほうで置き、消費税の還付を受ける前提で計算しています。</p>
+  <h3>1か月目：7品（合計$468。新規アカウントの上限$500以内）</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>品番</th><th>部品</th><th class="n">売値</th><th class="n">仕入れ</th><th class="n">利益</th><th class="n">率</th></tr></thead>
+    <tbody>
+      <tr><td class="pn">5TG-82541-00</td><td>ヤマハ YFZ450 ニュートラル配線 ※</td><td class="n">6,784</td><td class="n">1,368</td><td class="n">1,907</td><td class="n">28%</td></tr>
+      <tr><td class="pn">46092-1123</td><td>カワサキ KLR チョークレバー</td><td class="n">7,983</td><td class="n">2,429</td><td class="n">1,935</td><td class="n">24%</td></tr>
+      <tr class="hl"><td class="pn">24610-446-650</td><td>ホンダ XR200 シフトスピンドル</td><td class="n">10,149</td><td class="n">3,028</td><td class="n">3,183</td><td class="n">31%</td></tr>
+      <tr><td class="pn">5XC-13597-30</td><td>ヤマハ YZ250F キャブジョイント</td><td class="n">11,017</td><td class="n">4,398</td><td class="n">2,655</td><td class="n">24%</td></tr>
+      <tr class="hl"><td class="pn">3Y6-13586-00</td><td>ヤマハ SR250 インテークジョイント</td><td class="n">12,245</td><td class="n">4,398</td><td class="n">3,672</td><td class="n">30%</td></tr>
+      <tr><td class="pn">27010-1464</td><td>カワサキ Vulcan サイドスタンドスイッチ</td><td class="n">12,623</td><td class="n">5,328</td><td class="n">3,139</td><td class="n">25%</td></tr>
+      <tr class="hl"><td class="pn">2D1-22151-00</td><td>ヤマハ FZ1/FZ8 チェーンガイドシール</td><td class="n">12,952</td><td class="n">4,948</td><td class="n">3,756</td><td class="n">29%</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">単位は円。仕入れは送料込みの税込額（楽天は送料800円を仮置き。店ごとに要確認）。国際送料は2,300円で計算。※ 5TG-82541-00 は別品番（3GB-82540-01）とのセットの可能性があり、出品前に確認する。</p>
+  <h3>2か月目以降の候補</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>品番</th><th>部品</th><th class="n">売値</th><th class="n">利益</th><th>注意</th></tr></thead>
+    <tbody>
+      <tr><td class="pn">5UG-81940-00</td><td>ヤマハ Raptor700 スターターリレー</td><td class="n">15,572</td><td class="n">4,225</td><td>米国に社外品が多い</td></tr>
+      <tr><td class="pn">56001-1593</td><td>カワサキ ミラー右</td><td class="n">16,995</td><td class="n">5,002</td><td>90日で1回だけ</td></tr>
+      <tr><td class="pn">11632-323-003</td><td>ホンダ CB500/550 ジェネレーターカバー</td><td class="n">17,426</td><td class="n">3,959</td><td>重いと送料が増える</td></tr>
+      <tr><td class="pn">5PX-81950-00</td><td>ヤマハ TDM900/XV1700 リレー</td><td class="n">19,595</td><td class="n">6,054</td><td>—</td></tr>
+      <tr><td class="pn">BN6-82310-00</td><td>ヤマハ R6 イグニッションコイル</td><td class="n">18,257</td><td class="n">3,647</td><td>在庫が判定不能</td></tr>
+      <tr><td class="pn">39076-0045</td><td>カワサキ KX250 リミッター</td><td class="n">23,275</td><td class="n">5,674</td><td>日本の競合6件</td></tr>
+      <tr><td class="pn">21121-0058</td><td>カワサキ KX250F コイル</td><td class="n">12,843</td><td class="n">2,607</td><td>利益率20%でぎりぎり</td></tr>
+    </tbody>
+  </table></div>
+  <details><summary>確認して外した品番と理由</summary>
+  <ul>
+    <li><span class="pn">13225-MFJ-D01</span>：出品ページに「Number in Pack 8」。8個入りで、利益は約500円</li>
+    <li><span class="pn">23037-1405</span>：左右セット（1405と1406）。仕入れが2個分になり赤字</li>
+    <li><span class="pn">11061-0374</span>・<span class="pn">5VS-25867-00</span>：1回だけ1.1万円で売れていたが、いまの日本発の最安値は1,600円台</li>
+    <li><span class="pn">1C3-17231-20</span>・<span class="pn">21121-1186</span>：日本からの落札がなく、米国のセラーが安く売っていた</li>
+    <li><span class="pn">5PA-16371-10</span>・<span class="pn">12053-0191</span>・<span class="pn">52005-5009</span>：競合の最安値に合わせると赤字か、利益1,000円未満</li>
+  </ul>
+  </details>
+  <div class="callout"><b>期待値の目安。</b>どの品番も、日本からは90日で1〜5回しか売れていません。7品を並べても、最初の月に売れるのは0〜2件ほどです。最初の月の目的は利益ではなく、「売れる → 仕入れる → 発送する」を1周回すことです。</div>
+</section>
+
+<section id="sourcing">
+  <h2>仕入れ：メーカーごとに買う場所を変える</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>メーカー</th><th class="n">モノタロウ÷定価</th><th>買う場所</th></tr></thead>
+    <tbody>
+      <tr><td>ホンダ</td><td class="n">88%</td><td>モノタロウ（定価より安い）</td></tr>
+      <tr><td>ヤマハ</td><td class="n">100%</td><td>モノタロウか、10%引きの部品商の通販</td></tr>
+      <tr class="hl"><td>カワサキ</td><td class="n">122%</td><td>モノタロウは使わない。Webikeか楽天で定価で買う</td></tr>
+      <tr><td>スズキ</td><td class="n">—</td><td>部品商の通販・楽天（照合できず）</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><b>個人が業販価格（定価の7〜8掛け）を得るのは難しい。</b>カワサキ公式の業者会員は「ネット通販専門の業者は対象外」と明記。部品商には「個人事業主・月3万円」の条件で掛け率を聞いてみる価値がある。</li>
+    <li><b>消費税の還付</b>：開業届と同時に「課税事業者選択届出書」を出し、一般課税で申告する。インボイス登録はしない（氏名が公表されない）。2年間は免税事業者に戻れない。</li>
+    <li><b>届くまでの日数</b>：モノタロウは「5日以内出荷」が最多。発送までの日数（ハンドリングタイム）は7〜10営業日で設定する。</li>
+  </ul>
+</section>
+
+<section id="money">
+  <h2>月にいくらになるか（目安）</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>1,000品を出品した場合</th><th class="n">利益 ¥4,000/件</th><th class="n">利益 ¥6,000/件</th></tr></thead>
+    <tbody>
+      <tr><td>月に3%売れる（30件）</td><td class="n">¥120,000</td><td class="n">¥180,000</td></tr>
+      <tr class="hl"><td>月に5%売れる（50件）</td><td class="n">¥200,000</td><td class="n">¥300,000</td></tr>
+      <tr><td>月に7%売れる（70件）</td><td class="n">¥280,000</td><td class="n">¥420,000</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">売れる割合の参考：厳選して出品しているセラーは90日で20〜50%（shotime 32%、haruwws_japan 29%、steprise 49%）、大量出品の大手は0.5〜7%。上の数字は外注費と作業時間を引く前の粗利。</p>
+  <div class="callout warn"><b>立ち上がりは遅い。</b>新規アカウントの出品上限は月10品・$500で、合格品の単価（約$145）だと月3件ほどしか売れない。毎月の上限引き上げ申請で広げる前提で、1,000品に届くのは半年〜1年先。1件売れるたびに1〜1.5万円の仕入れ代金を立て替える必要もある。</div>
+</section>
+
+<section id="ops">
+  <h2>発送：作業量と家族に頼む場合の判断材料</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>項目</th><th>数字</th></tr></thead>
+    <tbody>
+      <tr><td>1件の作業時間</td><td>慣れた後15〜25分（慣れる前は約38分）＋1日1回の持ち込みか集荷で15〜30分</td></tr>
+      <tr><td>月50件なら</td><td>月20〜25時間</td></tr>
+      <tr><td>SpeedPAK Economy（米国）</td><td>500g ¥2,060 / 1kg ¥3,020 / 2kg ¥5,245。55.88cmを超えると+¥2,475。ローソンで24時間持ち込める</td></tr>
+      <tr><td>集荷</td><td>FedEx・EMSの集荷は平日昼が中心</td></tr>
+      <tr><td>初期費用</td><td>1〜3万円（はかり・メジャー・プリンター・資材）、置き場所は半畳〜1畳</td></tr>
+      <tr><td>外注する場合</td><td>業者は1件300〜800円。在宅の個人は1件100〜200円（クラウドワークスの募集より）</td></tr>
+    </tbody>
+  </table></div>
+  <p>家族が日中家にいれば、平日昼の集荷が使え、仕入れ品も対面で受け取れます。必要なのは梱包・採寸・写真での記録・住所の確認です。頼むかどうかは、この作業量を見て二人で決めてください。</p>
+</section>
+
+<section id="risk">
+  <h2>リスク</h2>
+  <ul>
+    <li><b>円高</b>：日米の価格差がこの商売の源泉。1ドル140円になれば円建ての売値は約1割下がる。</li>
+    <li><b>最大手との価格競争</b>：sunshine-tokyo（出品87,000件以上）が相場より約5%安く出し、値下げ交渉にも応じている。実際の成約価格は表示より低めと見ておく。</li>
+    <li><b>適合違い・返品</b>：国際配送は、適合違いの返品送料をeBayが持つ制度（Guaranteed Fit）の対象外。品番だけで判断し、発送前に買い手へ品番か車台番号を確認する。</li>
+    <li><b>メーカーの値上げ</b>：カワサキは2025年10月に+4.9%、2026年4月に+6.6%。売値を古い仕入れ値のまま据え置くと、利益が消える。</li>
+    <li><b>出品禁止品</b>：eBayは2026年9月24日からエアバッグ関連を禁止。バッテリー・スプレー・オイルは発送不可。</li>
+    <li><b>eBayの規約</b>：仕入れ先から買い手へ直送させるのは禁止。必ず自分（か発送代行）が受け取って検品してから送る。</li>
+  </ul>
+</section>
+
+<section id="start">
+  <h2>始め方</h2>
+  <div class="steps">
+    <div class="step"><div class="when">準備 · 2〜4週</div><b>開業届と課税事業者選択届出書を出す。古物商は、中古を扱う場合だけ取る</b><div class="gate">新品の純正部品だけなら、古物商がなくても始められる（要確認）。住民税は「自分で納付」にする。</div></div>
+    <div class="step"><div class="when">1〜3か月目</div><b>合格リストのホンダ・ヤマハ・カワサキから10品ずつ手で出品する</b><div class="gate">次に進む条件：20件売れる・赤字0件・キャンセル0件。毎月上限の引き上げを申請する。</div></div>
+    <div class="step"><div class="when">4〜6か月目</div><b>品番→仕入れ値→利益→出品文までを自分用ツールで自動化する</b><div class="gate">モノタロウの価格取得と利益計算は、この調査で動作を確認済み。次に進む条件：月の利益5万円。</div></div>
+    <div class="step"><div class="when">7〜12か月目</div><b>出品を1,000品へ広げ、発送を家族か外注に任せる</b><div class="gate">次に進む条件：月の利益15万円。撤退条件：6か月で月3万円に届かない、またはアカウントに制限がかかる。</div></div>
+  </div>
+</section>
+
+<section id="method">
+  <h2>調べ方と、途中で直した誤り</h2>
+  <ul>
+    <li>eBay（ログイン済み）の「売れた商品」を、発送元＝日本で絞り込み、キーワードごとに最大1,200件を取得。バイク5,648件・車5,531件・バドミントン130件。</li>
+    <li>品番ごとにモノタロウの価格を2,669品番分取得し、1,328品番で取れた。定価との比率はWebike・楽天と比べて算出。</li>
+    <li><b>訂正1</b>：最初は品番の数字と価格がつながって「670万円」などと誤読していた。価格欄から直接読むように直し、全データを取り直した。</li>
+    <li><b>訂正2</b>：最初は米国の関税（12.8%）をセラーが負担するとして引いていた。eBay公式ページで「支払うのはバイヤー」と確認し、外した。</li>
+    <li>送料は重さが分からないため0.5kg相当で計算した。値下げ交渉で売れた商品は、実際の成約価格が表示より低い可能性がある。</li>
+  </ul>
+</section>
+
+<footer>
+  出典：eBay Sold検索（2026-09-23取得）、monotaro.com、webike.net、ebay.co.jp/tariffs、ebay.co.jp/ddp-info、Orange Connex 料金表（2026-03-25発効）、eBay Japan 2024年の年間レポート、各社の公開情報。元データ：research/ebay/genres/
+</footer>
+</div>

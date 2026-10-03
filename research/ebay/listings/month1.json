@@ -1,0 +1,167 @@
+[
+ {
+  "pn": "24610-446-650",
+  "pn_full": "24610-446-650",
+  "make": "Honda",
+  "usd": 63.99,
+  "cost": 3028,
+  "src": "モノタロウ https://www.monotaro.com/g/02565439/ (予備: 楽天 hirochishop)",
+  "title": "Honda Genuine Gearshift Spindle 24610-446-650 XR200R XL200R ATC200X New Japan",
+  "name": "Spindle, Gearshift",
+  "type": "Shift Shaft",
+  "placement": "Left",
+  "fit": [
+   [
+    "Honda",
+    "XR200R",
+    "1981-1983"
+   ],
+   [
+    "Honda",
+    "XL200R",
+    "1983-1984"
+   ],
+   [
+    "Honda",
+    "XL185S",
+    "1982-1983"
+   ],
+   [
+    "Honda",
+    "XL125S",
+    "1982, 1984"
+   ],
+   [
+    "Honda",
+    "ATC200",
+    "1983"
+   ],
+   [
+    "Honda",
+    "ATC200X",
+    "1984-1985"
+   ],
+   [
+    "Honda",
+    "XR200",
+    "1984"
+   ]
+  ],
+  "note": "米国の部品店（Partzilla）では「Currently Unavailable」。日本からの落札実績あり（2026-09-20 ¥10,229）",
+  "profit": 3119,
+  "jpy": 10072,
+  "margin": 31.0
+ },
+ {
+  "pn": "5XC-13597-30",
+  "pn_full": "5XC-13597-30-00",
+  "make": "Yamaha",
+  "usd": 69.99,
+  "cost": 4398,
+  "src": "モノタロウ https://www.monotaro.com/g/07708322/ (予備: 楽天 hirochishop)",
+  "title": "Yamaha Genuine Carburetor Joint Intake Boot 5XC-13597-30-00 YZ250F WR250F New",
+  "name": "Joint, Carburetor 3",
+  "type": "Intake Manifold Boot",
+  "placement": "",
+  "fit": [
+   [
+    "Yamaha",
+    "YZ250F",
+    "2007-2011 (Partzilla表記はYZ250)"
+   ],
+   [
+    "Yamaha",
+    "WR250F",
+    "2007-2009, 2011-2013"
+   ]
+  ],
+  "note": "米国 Partzilla $72.95 在庫あり。米国の純正は12,237〜14,157円で売れている",
+  "profit": 2655,
+  "jpy": 11016,
+  "margin": 24.1
+ },
+ {
+  "pn": "2D1-22151-00",
+  "pn_full": "2D1-22151-00-00",
+  "make": "Yamaha",
+  "usd": 84.99,
+  "cost": 4948,
+  "src": "モノタロウ https://www.monotaro.com/g/07707043/ (予備: 楽天 hirochishop)",
+  "title": "Yamaha Genuine Chain Guide Guard Seal 2D1-22151-00-00 FZ1 FZS1000 FZ8 06-15 New",
+  "name": "Seal, Guard",
+  "type": "Chain Guide Seal",
+  "placement": "",
+  "fit": [
+   [
+    "Yamaha",
+    "FZ1 / FZS1000 (FZ1 Fazer)",
+    "2006-2015"
+   ],
+   [
+    "Yamaha",
+    "FZ8",
+    "2011-2013"
+   ]
+  ],
+  "note": "米国 Partzilla $103.91。日本の競合 15,909〜16,682円、直近の落札 9,994円",
+  "profit": 4109,
+  "jpy": 13377,
+  "margin": 30.7
+ },
+ {
+  "pn": "11632-323-003",
+  "pn_full": "11632-323-003",
+  "make": "Honda",
+  "usd": 109.99,
+  "cost": 8798,
+  "src": "モノタロウ https://www.monotaro.com/g/07943233/ (予備: 楽天 hirochishop)",
+  "title": "Honda Genuine Alternator Cover B 11632-323-003 CB500 Four CB550 K F New Japan",
+  "name": "Cover B, Alternator (Uehara)",
+  "type": "Alternator / Generator Cover",
+  "placement": "",
+  "fit": [
+   [
+    "Honda",
+    "CB500 Four K0-K2",
+    "1971-1973 (要確認)"
+   ],
+   [
+    "Honda",
+    "CB550 Four K / F",
+    "1974-1978 (要確認)"
+   ]
+  ],
+  "note": "米国 Partzilla「Currently Unavailable」。ドイツ 19,030円〜・米国NOS 22,035円〜。適合年式はPartzillaに表がないため出品前に要確認",
+  "profit": 3865,
+  "jpy": 17312,
+  "margin": 22.3
+ },
+ {
+  "pn": "39076-0045",
+  "pn_full": "39076-0045",
+  "make": "Kawasaki",
+  "usd": 146.99,
+  "cost": 12235,
+  "src": "楽天 moto-occ https://item.rakuten.co.jp/moto-occ/39076-0045/ (予備: 楽天 occ-netshop)",
+  "title": "Kawasaki Genuine Starter Limiter 39076-0045 KX250 KX250X 2021-2024 New Japan",
+  "name": "Limiter",
+  "type": "Starter Torque Limiter",
+  "placement": "",
+  "fit": [
+   [
+    "Kawasaki",
+    "KX250",
+    "2021-2024"
+   ],
+   [
+    "Kawasaki",
+    "KX250X",
+    "2021-2022"
+   ]
+  ],
+  "note": "米国 Partzilla 定価 $204.20。日本の競合 23,275〜26,907円（6件）",
+  "profit": 5560,
+  "jpy": 23136,
+  "margin": 24.0
+ }
+]
